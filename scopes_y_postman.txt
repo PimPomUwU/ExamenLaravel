@@ -1,0 +1,418 @@
+Implementación de Scopes Globales en Laravel + Uso desde Postman
+=======================================================
+
+1. Qué es un Global Scope
+--------------------------
+Un *global scope* aplica condiciones automáticas a todas las consultas del modelo.
+Ejemplo: filtrar por 'active', aplicar orden, o incluir relaciones según la request.
+
+-------------------------------------------------------
+2. Crear Scopes Globales (App\Scopes)
+-------------------------------------------------------
+
+📁 app/Scopes/IncludedScope.php
+--------------------------
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class IncludedScope implements Scope
+{
+    public function apply(Builder $builder, Model $model)
+    {
+        $allowIncluded = $model->allowIncluded ?? [];
+
+        if (empty($allowIncluded) || empty(request('included'))) return;
+
+        $relations = explode(',', request('included'));
+        $relations = array_filter(array_map('trim', $relations));
+
+        $relations = array_values(array_filter($relations, function ($r) use ($allowIncluded) {
+            return in_array($r, (array) $allowIncluded, true);
+        }));
+
+        if (!empty($relations)) $builder->with($relations);
+    }
+}
+
+-------------------------------------------------------
+📁 app/Scopes/FilterScope.php
+-------------------------------------------------------
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class FilterScope implements Scope
+{
+    public function apply(Builder $builder, Model $model)
+    {
+        $allowFilter = $model->allowFilter ?? [];
+        $filters = request('filter');
+
+        if (empty($allowFilter) || empty($filters) || !is_array($filters)) return;
+
+        foreach ($filters as $filter => $value) {
+            if (in_array($filter, (array) $allowFilter, true)) {
+                $builder->where($filter, 'LIKE', '%'.$value.'%');
+            }
+        }
+    }
+}
+
+-------------------------------------------------------
+📁 app/Scopes/SortScope.php
+-------------------------------------------------------
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class SortScope implements Scope
+{
+    public function apply(Builder $builder, Model $model)
+    {
+        $allowSort = $model->allowSort ?? [];
+        $sort = request('sort');
+
+        if (empty($allowSort) || empty($sort)) return;
+
+        $sortFields = explode(',', $sort);
+
+        foreach ($sortFields as $field) {
+            $direction = 'asc';
+            $field = trim($field);
+            if ($field === '') continue;
+
+            if (substr($field, 0, 1) === '-') {
+                $direction = 'desc';
+                $field = substr($field, 1);
+            }
+
+            if (in_array($field, (array) $allowSort, true)) {
+                $builder->orderBy($field, $direction);
+            }
+        }
+    }
+}
+
+-------------------------------------------------------
+3. Modelo actualizado (App\Models\Apprentice)
+-------------------------------------------------------
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use App\Scopes\IncludedScope;
+use App\Scopes\FilterScope;
+use App\Scopes\SortScope;
+
+class Apprentice extends Model
+{
+    protected $fillable = ['name', 'email', 'cellnumber', 'course_id', 'computer_id'];
+
+    protected $allowIncluded = ['course', 'computer'];
+    protected $allowFilter = ['id', 'course_id', 'computer_id'];
+    protected $allowSort = ['id', 'name', 'course_id', 'computer_id'];
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new IncludedScope());
+        static::addGlobalScope(new FilterScope());
+        static::addGlobalScope(new SortScope());
+    }
+
+    public function course() {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function computer() {
+        return $this->belongsTo(Computer::class);
+    }
+
+    public function scopeGetOrPaginate(Builder $query)
+    {
+        if (request('perPage')) {
+            $perPage = intval(request('perPage'));
+            if ($perPage > 0) {
+                return $query->paginate($perPage);
+            }
+        }
+        return $query->get();
+    }
+}
+
+-------------------------------------------------------
+4. Uso desde Postman
+-------------------------------------------------------
+
+✅ Ruta base de ejemplo:
+GET http://127.0.0.1:8000/api/apprentices
+
+Los scopes globales se activan automáticamente con los parámetros de la request.
+
+1️⃣ Incluir relaciones (IncludedScope)
+-------------------------------------
+GET /api/apprentices?included=course,computer
+
+2️⃣ Filtrar resultados (FilterScope)
+-------------------------------------
+GET /api/apprentices?filter[course_id]=2
+
+Múltiples filtros:
+GET /api/apprentices?filter[course_id]=2&filter[computer_id]=3
+
+3️⃣ Ordenar resultados (SortScope)
+-------------------------------------
+GET /api/apprentices?sort=-name
+(GET ordena descendentemente por name)
+
+Varios campos:
+GET /api/apprentices?sort=-course_id,name
+
+4️⃣ Paginación (GetOrPaginate)
+-------------------------------------
+GET /api/apprentices?perPage=5
+
+5️⃣ Combinado
+-------------------------------------
+GET /api/apprentices?included=course,computer&filter[course_id]=2&sort=-name&perPage=5
+
+6️⃣ Ignorar global scopes (opcional)
+-------------------------------------
+use App\Scopes\FilterScope;
+
+Apprentice::withoutGlobalScope(FilterScope::class)->get();
+
+O quitar todos:
+Apprentice::withoutGlobalScopes()->get();
+
+-------------------------------------------------------
+Hecho por: Laravel GPT
+
+
+
+
+v2:
+Convertir Scopes Locales en Globales (sin modificar su contenido)
+=================================================================
+
+Este método te permite mantener tus scopes locales tal como los tienes definidos
+(scopeIncluded, scopeFilter, scopeSort), pero hacer que se apliquen automáticamente
+como *global scopes* en todas las consultas del modelo.
+
+------------------------------------------------------------
+1. Ejemplo original del modelo Apprentice
+------------------------------------------------------------
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class Apprentice extends Model
+{
+    protected $fillable = ['name', 'email', 'cellnumber', 'course_id', 'computer_id'];
+
+    protected $allowIncluded = ['course', 'computer'];
+    protected $allowFilter = ['id', 'course_id', 'computer_id'];
+    protected $allowSort = ['id', 'name', 'course_id', 'computer_id'];
+
+    public function course() {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function computer() {
+        return $this->belongsTo(Computer::class);
+    }
+
+    // Scopes locales (no se modifican)
+    public function scopeIncluded(Builder $query) { ... }
+    public function scopeFilter(Builder $query) { ... }
+    public function scopeSort(Builder $query) { ... }
+    public function scopeGetOrPaginate(Builder $query) { ... }
+}
+
+------------------------------------------------------------
+2. Cómo hacerlos Globales (sin tocarlos)
+------------------------------------------------------------
+Solo agrega este método dentro del mismo modelo:
+
+protected static function booted()
+{
+    static::addGlobalScope('included', function ($builder) {
+        $instance = new static;
+        $instance->scopeIncluded($builder);
+    });
+
+    static::addGlobalScope('filter', function ($builder) {
+        $instance = new static;
+        $instance->scopeFilter($builder);
+    });
+
+    static::addGlobalScope('sort', function ($builder) {
+        $instance = new static;
+        $instance->scopeSort($builder);
+    });
+}
+
+------------------------------------------------------------
+3. Qué hace esto
+------------------------------------------------------------
+✔️ Ejecuta automáticamente tus scopes locales como globales.
+✔️ No necesitas llamar a ->included()->filter()->sort().
+✔️ Si no existen parámetros request() correspondientes, no afectan la consulta.
+✔️ No modifica la lógica interna de tus scopes originales.
+
+------------------------------------------------------------
+4. Cómo desactivar un global scope temporalmente
+------------------------------------------------------------
+Si necesitas ignorar alguno en una consulta:
+
+Apprentice::withoutGlobalScope('filter')->get();
+Apprentice::withoutGlobalScope('included')->get();
+Apprentice::withoutGlobalScopes()->get(); // Ignora todos
+
+------------------------------------------------------------
+5. Ejemplo de uso desde Postman
+------------------------------------------------------------
+Ruta de ejemplo:
+GET http://127.0.0.1:8000/api/apprentices
+
+Parámetros:
+
+1️⃣ Incluir relaciones:
+GET /api/apprentices?included=course,computer
+
+2️⃣ Filtrar resultados:
+GET /api/apprentices?filter[course_id]=2
+
+3️⃣ Ordenar resultados:
+GET /api/apprentices?sort=-name
+
+4️⃣ Paginación:
+GET /api/apprentices?perPage=5
+
+5️⃣ Combinado:
+GET /api/apprentices?included=course,computer&filter[course_id]=2&sort=-name&perPage=5
+
+------------------------------------------------------------
+Hecho por: Laravel GPT
+
+
+
+originales: <?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class Apprentice extends Model
+{
+    //
+    protected $fillable = ['name', 'email', 'cellnumber', 'course_id', 'computer_id'];
+
+    protected $allowIncluded = ['course', 'computer'];
+    protected $allowFilter = ['id', 'courde_id', 'computer_id'];
+    protected $allowSort = ['id', 'name', 'course_id', 'computer_id'];
+
+    public function course() {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function computer() {
+        return $this->belongsTo(Computer::class);
+    }
+
+    public function scopeIncluded(Builder $query) {
+        if (empty($this->allowIncluded) || empty(request("included"))) {
+            return;
+        }
+
+        $relations = explode(',',request('included'));
+
+        $allowIncluded = collect($this->allowIncluded);
+
+        foreach ($relations as $key => $relationship) {
+
+            if (!$allowIncluded->contains($relationship)) {
+                unset($relations[$key]);
+            }
+        }
+
+        $query->with($relations);
+    }
+
+    public function scopeFilter(Builder $query) {
+        if (empty($this->allowFilter) || empty(request("filter"))) {
+            return;
+        }
+
+        $filters = request('filter');
+
+        $allowFilter = collect($this->allowFilter);
+
+        foreach ($filters as $filter => $value) {
+
+            if ($allowFilter->contains($filter)) {
+                $query->WHERE($filter, 'LIKE', '%'.$value.'%');
+            }
+        }
+
+    }
+
+    public function scopeSort(Builder $query) {
+
+        if (empty($this->allowSort) || empty(request("sort"))) {
+            return;
+        }
+
+        $sortFields = explode(',', request('sort'));
+        $allowSort = collect($this->allowSort);
+
+        foreach ($sortFields as $sortField) {
+
+            $direction = 'asc';
+
+            if (substr($sortField, 0, 1) === "-") {
+                $direction = 'desc';
+                $sortField = substr($sortField, 1);
+            }
+
+            //return $sortField;
+
+            if ($allowSort->contains($sortField)) {
+                $query->orderBy($sortField, $direction);
+            }
+        }
+
+
+    }
+
+    public function scopeGetOrPaginate(Builder $query) {
+
+        if (request('perPage')) {
+            $perPage = intval(request('perPage'));
+
+            if ($perPage) {
+                return $query->paginate($perPage);
+            }
+        }
+
+        return $query->get();
+    }
+}

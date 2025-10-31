@@ -1,0 +1,369 @@
+1. Instalar API y hacer ApiProvider:
+    - php artisan install:api
+    - php artisan make:provider RouteServiceProvider
+    - agregar al provider (Route debe ser de: use Illuminate\Support\Facades\Route;):
+        /**
+            * Bootstrap services.
+        */
+        public function boot(): void
+        {
+            $this->mapApiRoutes();
+        }
+        protected function mapApiRoutes(): void
+        {
+            Route::prefix('v1')
+                ->middleware('api')
+                ->group(base_path('routes/api.php'));
+        }
+
+
+2. Crear controladores con resource: php artisan make:model ModelSingular -mc --resource.
+
+
+3. Agregar ruta normal: Route::resource('nombre_ruta_plural', ModelController::class);
+    o api: Route::apiresource('nombre_ruta_plural', ModelController::class);
+
+3.1 Recordatorio de estructura, se pueden ver rutas con 'php artisan route:list':
+    normal:
+     GET|HEAD        employees ........................................................................... employees.index › EmployeeController@index
+    POST            employees ........................................................................... employees.store › EmployeeController@store
+    GET|HEAD        employees/create .................................................................. employees.create › EmployeeController@create
+    GET|HEAD        employees/{employee} .................................................................. employees.show › EmployeeController@show
+    PUT|PATCH       employees/{employee} .............................................................. employees.update › EmployeeController@update
+    DELETE          employees/{employee} ............................................................ employees.destroy › EmployeeController@destroy
+    GET|HEAD        employees/{employee}/edit ............................................................. employees.edit › EmployeeController@edit
+    GET|HEAD        sanctum/csrf-cookie .......................................... sanctum.csrf-cookie › Laravel\Sanctum › CsrfCookieController@show
+
+    Ejemplo:
+    Route::resource('centers', CenterController::class);
+
+    Explicacion: La ruta resource genera automaticamente las siguientes rutas:
+    - GET /centers → index()
+    - POST /centers → store()
+    - GET /centers/{id} → show()
+    - PUT/PATCH /centers/{id} → update()
+    - DELETE /centers/{id} → destroy()
+
+
+
+    api:
+     GET|HEAD        api/centers ............................................................................. centers.index › CenterController@index
+    POST            api/centers ............................................................................. centers.store › CenterController@store
+    GET|HEAD        api/centers/{center} ...................................................................... centers.show › CenterController@show
+    PUT|PATCH       api/centers/{center} .................................................................. centers.update › CenterController@update
+    DELETE          api/centers/{center} ................................................................ centers.destroy › CenterController@destroy
+
+
+4. Al modelo implementar fillable, relaciones y scopes (si son locales):
+    protected $fillable = ['campo1', 'campo2', 'foranea1', 'foranea2', ...];
+
+
+5. Relacionar modelos: La migracion debe tener la foranea y se debe incluir en la lista blanca protected $allowIncluded = ['func_relacion', ...].
+
+    -Si se siguen las convenciones entonces: $this->hasOne/hasMany(Model::class)
+
+    -En caso de que se cambie el nombre de la columna donde es belongsTo (por ejemplo y Center tiene id de Employee, pero en la migracion no se declaro como "employee_id" sino como "employee_manager_id"), entonces se aclara en la entidad fuerte al momento de hacer la relacion en su modelo:
+        return $this->hasOne(Model::class, 'nombre_en_la_debil', 'campo_señalado');
+        ejemplo: return $this->hasOne(Center::class, 'employee_manager_id', 'id');
+
+
+    -De muchos a muchos se crea la migracion y en los respectivos modelos:
+            public function modelplural() {
+                return $this->belongsToMany(Model::class);
+            }
+
+
+
+Validar datos con store:
+$data = $request->validate([
+        'campo'      => 'required/nullable|type|max:valor',
+        'foranea_id'      => 'required|exists:foranea,id',
+    ]);
+
+
+Se puede usar tinker con 'php artisan tinker' y permite ejecutar codigo, por ejemplo:
+
+    -Para crear:
+        1. Sin foranea: Center::create(["nombre"=>"Cauca", "direccion"=> "Carrera 11", "poblacion" => 1000]);
+        2. Con foranea: $center = new Center();
+            $center->nombre = 'Cauca';
+            $center->direccion = 'Carrera 11';
+            $center->poblacion = 1000;
+            $center->employee_manager_id = 1;
+            $center->save();
+
+Para validar relaciones con tinker yo uso:
+    Model::with('relacion')->get();
+
+    tambien para cosas especificas pueed ser: Employee::doesntHave('center')->with('center')->get();
+
+
+
+-Archivo para validar todas las relaciones
+
+
+Seeders
+Funcion: Nos permite llenar la BD con datos predefinidos en codigo con valores manuales.
+
+Crear seeder:
+    1. Comentar la creacion de User en DatabaseSeeder.php
+    2. php artisan make:seeder ModelPluralSeeder
+    3. En run() simular un store (como el codigo para crear un registro CON foranea desde el tinker)
+    4. Llamar al seeder desde DatabaseSeeder.php en run() por medio de call, asi: $this->call([ModelPlural1Seeder::class, ModelPlural2Seeder::class, ...]);
+    5. Se puede ejecutar con 'php artisan db:seed' o 'php artisan migrate:fresh --seed'.
+
+
+Factory: Parecido a los seeder pero laravel proporciona los datos (para ser exactos la libreria: fake), por ende se puede hacer una gran cantidad de registros.
+    0. Esto inutiliza al seeder en caso de no requerir foraneas, por ende la quitamos del DatabaseSeeder.
+    1. php artisan make:factory ModelFactory --model=Model
+    2. Codigo parecido a un store (como el codigo para crear un registro SIN foranea desde el tinker) en cuanto a la asignacion de datos:
+    return [
+        'user_id' => rand(min, max),
+        'text' => fake()->text()
+    ]
+    3. Seria bueno saber como funciona mejor faker, cuando usarlo y cuando no (como en el caso de user_id de arriba, ya que se uso rand() ).
+    4. Llamar al seeder desde DatabaseSeeder.php directo en run(): Model::factory(cantidad)->create();
+    5. Al modelo agregar: use HasFactory;
+    6.  Ejecutar con: 'php artisan migrate:fresh --seed'.
+
+
+-Scopes globales
+
+
+1. layouts/app.balde.php:
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <h1>Taller API:</h1>
+
+    <div>
+        @include('includes.navbar')
+    </div>
+
+    <div style="margin: 0 20px">
+        @yield('content', 'No hay contenido we')
+    </div>
+
+</body>
+
+</html>
+
+2. includes/navbar.blade.php:
+    <div>
+    <nav>
+        <a href="{{route('ruta.index')}}">Model</a>
+    </nav>
+    </div>
+
+3. CRUDS (
+    siempre tener: @extends('layouts.app')
+    iniciar/finalizar:@section('content')/@endsection
+    ):
+
+    a. INDEX
+        controller:
+        $items = Model::with('relacion')->get(); o $items = Model::all();
+
+        if ($request->wantsJson()) {
+            return response()->json(['data' => items], 200);
+        }
+
+        return view('blade.index', compact('items'));
+
+        blade:
+            <h2>Lista de items:</h2>
+        <ol>
+            @foreach ($items as $item)
+            <li>
+
+                <a href="{{ route('route.show', $item->campo) }}">
+                    {{ $item->campo }} - Manager: {{ $item->foraneaPIVOTE->campo}}
+                </a>
+                <button><a href="{{ route('route.edit', $item) }}">Editar</a></button>
+                <form action="{{ route('route.destroy', $item) }}" method="POST">
+                    @csrf
+                    @method('delete')
+                    <button type="submit"> Eliminar </button>
+                </form>
+
+            </li>
+            @endforeach
+        </ol>
+
+    b. CREATE
+        controller:
+        public function create(Request $request)
+        {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Use POST /items para crear'], 405);
+            }
+
+            $foraneas = \App\Models\Model::all(); //por si acaso
+
+            return view('blade.create', compact('foraneas') );
+        }
+        blade:
+        <form action="{{ route('route.store')}}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <input type="" id="campo" name="campo"> <br>
+
+            en caso de foraneas:
+            <select name="item_campo" campo="">
+                @foreach ($items as $item)
+                    <option value="{{$item->campo}}">{{$item->campo}}</option>
+                @endforeach
+            </select>
+
+            <button type="submit">Subir</button>
+        </form>
+
+    c. STORE (no tiene vista, es el post de create)
+        controller:
+        public function store(Request $request)
+        {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'price' => 'required|numeric|min:0',
+
+                //Validación de clave foránea
+                'department_id' => 'required|exists:departments,id',
+            ]);
+
+            $item = Item::create($validated);
+
+            if ($request->wantsJson()) {
+                return response()->json(['data' => $item], 201);
+            }
+
+            return redirect()->route('blade.index')->with('success', 'Item creado');
+        }
+
+
+    d. SHOW
+        controller:
+        public function show(Request $request, Item $item)
+        {
+
+            //$item = item->load('foranea'); //no creo que sea necesario pero por si acaso xd
+
+            if ($request->wantsJson()) {
+                return response()->json(['data' => $item], 200);
+            }
+
+            return view('blade.show', compact('item'));
+        }
+
+        blade:
+
+        <div>
+            <h2>Detalles del item</h2>
+
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ $item['campo'] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    e. EDIT
+        controller:
+        public function edit(Request $request, Item $item)
+        {
+            $foraneaLista = \App\Models\ModelForanea::doesntHave('Model')->with('Model')->get(); //Esta lista trae foraneas que no se asocian aun al modelo actual
+
+            $item = Model::with('relacionforaneafuncion')->find($item->campo);
+
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Use PUT/PATCH /items/{id} para editar'], 405);
+            }
+
+            return view('blade.edit', compact('item', 'foraneaLista'));
+        }
+
+
+        blade:
+        <form action="{{ route('route.update', $item->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        <label for="">
+            Nombre:
+            <input type="text" id="nombre" name="campo" value="{{ old('campo', $center->campo) }}"> <br>
+        </label>
+
+        Foranea actual: {{item->foranea}} - {{item->foraneaPIVOTE->campo}} <br>
+        <select name="foranea" value="{{ old('foranea', item->foranea)}}">
+            <option value="">Quitar</option>
+            @foreach ($foraneaLista as $foranea)
+                <option value="{{ $foranea->campo }}">{{ $$foranea->campo}} - {{$foranea->campo}}</option>
+            @endforeach
+        </select>
+
+    f. UPDATE
+        controller:
+        public function update(Request $request, Item $item)
+        {
+            $validated = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'price' => 'sometimes|required|numeric|min:0',
+            ]);
+
+            $item->update($validated);
+
+            if ($request->wantsJson()) {
+                return response()->json(['data' => $item], 200);
+            }
+
+            return redirect()->route('blade.index')->with('success', 'Item actualizado');
+        }
+
+    g. DELETE/DESTROY (no tiene vista)
+        controller:
+    public function destroy(Request $request, Item $item)
+    {
+        $item->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Item eliminado'], 200);
+        }
+
+        return redirect()->route('blade.index')->with('success', 'Item eliminado');
+    }
+
+Si hay errores probar:
+    composer dump-autoload
+    php artisan optimize:clear
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan route:clear
+
+
+Comandos instalarán PHP, Composer y el instalador de Laravel en macOS, Windows o Linux:
+
+# Run as administrator...
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.4'))
+
+
+Después de ejecutar uno de los comandos anteriores, debe reiniciar su sesión de terminal. Para actualizar PHP, Composer y el instalador de Laravel después de instalarlos a través de php.new, puedes volver a ejecutar el comando en tu terminal.
+
+Si ya tiene PHP y Composer instalados, puede instalar el instalador de Laravel a través de Composer:
+
+composer global require laravel/installer
