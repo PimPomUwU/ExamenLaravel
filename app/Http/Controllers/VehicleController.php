@@ -13,7 +13,7 @@ class VehicleController extends Controller
     public function index()
     {
         //
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $vehicles], 200);

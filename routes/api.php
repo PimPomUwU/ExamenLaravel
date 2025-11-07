@@ -4,6 +4,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ORMController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RolController;
@@ -26,6 +27,7 @@ Route::apiResource('categories', CategoryController::class);
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('products', ProductController::class);
 Route::apiResource('carts', CartController::class);
+Route::apiResource('orders', OrderController::class);
 
 
 //ORM

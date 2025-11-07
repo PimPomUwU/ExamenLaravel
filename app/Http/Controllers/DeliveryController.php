@@ -14,7 +14,7 @@ class DeliveryController extends Controller
     {
         //
 
-        $deliveries = Delivery::with(['user'])->get();
+        $deliveries = Delivery::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $deliveries], 200);

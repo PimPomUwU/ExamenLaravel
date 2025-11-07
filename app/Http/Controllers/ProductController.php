@@ -13,7 +13,7 @@ class ProductController extends Controller
     public function index()
     {
         //
-        $products = Product::all();
+        $products = Product::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $products], 200);

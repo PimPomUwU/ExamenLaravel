@@ -13,7 +13,7 @@ class CartController extends Controller
     public function index()
     {
         //
-        $carts = Cart::all();
+        $carts = Cart::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $carts], 200);

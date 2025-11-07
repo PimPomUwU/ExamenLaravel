@@ -2,8 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
+use App\Models\Category;
+use App\Models\Company;
+use App\Models\Delivery;
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\Rol;
+use App\Models\Service;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Database\Eloquent\Relations\Relation;
     use Illuminate\Http\Request;
     use Illuminate\Support\Str;
@@ -18,6 +26,14 @@ use Illuminate\Database\Eloquent\Relations\Relation;
         protected array $models = [
             'rol'     => Rol::class,
             'user'   => User::class,
+            'cart'   => Cart::class,
+            'category'   => Category::class,
+            'delivery'   => Delivery::class,
+            'order'   => Order::class,
+            'product'   => Product::class,
+            'vehicle'   => Vehicle::class,
+            'service'   => Service::class,
+            'company'   => Company::class,
         ];
 
         /**

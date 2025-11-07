@@ -15,7 +15,7 @@ class UserController extends Controller
     {
         //
 
-        $users = User::all();
+        $users = User::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $users], 200);

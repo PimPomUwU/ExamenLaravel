@@ -3,51 +3,50 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
-class Service extends Model
+class Order extends Model
 {
     //
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'description',
+        'phone',
     ];
 
-        protected $allowIncluded = [
+    protected $allowIncluded = [
         'company',
-        'carts',
-        'category',
-        'orders',
+        'user',
+        'product',
+        'service',
     ];
 
     // Campos por los que se puede filtrar
     protected $allowFilter = [
         'id',
-        'name'
+        'phone'
     ];
 
     // Campos por los que se puede ordenar
     protected $allowSort = [
         'id',
     ];
+        //relaciones
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
 
-        public function company() {
+    public function product() {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function service() {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function company() {
         return $this->belongsTo(Company::class);
-    }
-
-        public function category() {
-        return $this->belongsTo(Category::class);
-    }
-
-        public function carts () {
-       return $this->hasMany(Cart::class);
-    }
-
-        public function orders () {
-       return $this->hasMany(Order::class);
     }
 
             public function scopeIncluded(Builder $query)

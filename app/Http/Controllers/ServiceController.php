@@ -13,7 +13,7 @@ class ServiceController extends Controller
     public function index()
     {
         //
-        $services = Service::all();
+        $services = Service::included()->filter()->sort()->getOrPaginate();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $services], 200);

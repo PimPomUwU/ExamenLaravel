@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\Order;
 use Illuminate\Http\Request;
 
-class CategoryController extends Controller
+class OrderController extends Controller
 {
-      /**
+     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         //
-        $categories = Category::included()->filter()->sort()->getOrPaginate();
+        $orders = Order::all();
 
         //if ($request->wantsJson()) {
-            return response()->json(['data' => $categories], 200);
+            return response()->json(['data' => $orders], 200);
         //}
 
         //return view('center.index', compact('centers'));
@@ -38,16 +38,18 @@ class CategoryController extends Controller
     {
         //
         $validated = $request->validate([
-            'name' => 'required|string|min:0',
-            'description' => 'required|string|min:0',
+            'phone' => 'required|string|min:0',
 
+            'user_id' => 'required|exists:user,id',
+            'product_id' => 'required|exists:product,id',
+            'service_id' => 'required|exists:service,id',
             'company_id' => 'required|exists:company,id',
         ]);
 
-        $category = Category::create($validated);
+        $order = Order::create($validated);
 
         //if ($request->wantsJson()) {
-            return response()->json(['data' => $category], 201);
+            return response()->json(['data' => $order], 201);
         //}
 
         //return redirect()->route('centers.index')->with('success', 'Centro creado');
@@ -56,11 +58,11 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, Category $category)
+    public function show(Request $request, Order $order)
     {
         //
                 //if ($request->wantsJson()) {
-            return response()->json(['data' => $category], 200);
+            return response()->json(['data' => $order], 200);
         //}
 
         //return view('center.show', compact('center'));
@@ -69,7 +71,7 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Category $category)
+    public function edit(Order $order)
     {
         //
     }
@@ -77,13 +79,15 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Order $order)
     {
         //
             $validated = $request->validate([
-            'name' => 'required|string|min:0',
-            'description' => 'required|string|min:0',
+            'phone' => 'required|string|min:0',
 
+            'user_id' => 'required|exists:user,id',
+            'product_id' => 'required|exists:product,id',
+            'service_id' => 'required|exists:service,id',
             'company_id' => 'required|exists:company,id',
 
         ]);
@@ -91,27 +95,27 @@ class CategoryController extends Controller
         //$center->employee_manager_id = $request->employee_manager_id;
 
 
-        $category->update($validated);
+        $order->update($validated);
 
         //if ($request->wantsJson()) {
-            return response()->json(['data' => $category], 200);
+            return response()->json(['data' => $order], 200);
         //}
 
-        //return redirect()->route('centers.index')->with('success', 'Category actualizado');
+        //return redirect()->route('centers.index')->with('success', 'Order actualizado');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Category $category)
+    public function destroy(Request $request, Order $order)
     {
         //
-        $category->delete();
+        $order->delete();
 
         //if ($request->wantsJson()) {
-            return response()->json(['message' => 'Category eliminado'], 200);
+            return response()->json(['message' => 'Order eliminado'], 200);
         //}
 
-        //return redirect()->route('centers.index')->with('success', 'Category eliminado');
+        //return redirect()->route('centers.index')->with('success', 'Order eliminado');
     }
 }
