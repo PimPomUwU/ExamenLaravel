@@ -42,6 +42,10 @@ class User extends Model
        return $this->hasOne(Company::class);
     }
 
+    public function carts () {
+       return $this->hasMany(Cart::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

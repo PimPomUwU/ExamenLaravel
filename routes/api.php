@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DeliveryController;
@@ -24,6 +25,7 @@ Route::apiResource('companies', CompanyController::class);
 Route::apiResource('categories', CategoryController::class);
 Route::apiResource('services', ServiceController::class);
 Route::apiResource('products', ProductController::class);
+Route::apiResource('carts', CartController::class);
 
 
 //ORM
