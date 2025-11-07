@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
-            
+            $table->string('gender');
+            $table->string('birth_date');
+            $table->string('vehicle_type');
+            $table->string('dni_document_front');
+            $table->string('dni_document_back');
+            $table->string('driving_license');
+            $table->string('transit_license');
+            $table->string('mandatory_insurance');
+            $table->string('profile_photo');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

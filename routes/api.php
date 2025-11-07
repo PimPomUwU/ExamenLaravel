@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ORMController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\UserController;
@@ -12,6 +13,7 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('users', UserController::class);
 Route::apiResource('rols', RolController::class);
+Route::apiResource('deliveries', DeliveryController::class);
 
 
 //ORM

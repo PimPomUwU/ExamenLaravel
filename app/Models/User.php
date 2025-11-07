@@ -34,6 +34,10 @@ class User extends Model
        return $this->belongsToMany(Rol::class);
     }
 
+    public function delivery () {
+       return $this->hasOne(Delivery::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *
