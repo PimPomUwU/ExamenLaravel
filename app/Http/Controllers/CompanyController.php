@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class CompanyController extends Controller
 {
-       /**
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -40,7 +40,7 @@ class CompanyController extends Controller
         $validated = $request->validate([
             'company_name' => 'required|string|min:0',
 
-            'user_id' => 'required|exists:delivery,id',
+            'user_id' => 'required|exists:user,id',
         ]);
 
         $company = Company::create($validated);
@@ -82,7 +82,7 @@ class CompanyController extends Controller
             $validated = $request->validate([
             'company_name' => 'required|string|min:0',
 
-            'user_id' => 'required|exists:delivery,id',
+            'user_id' => 'required|exists:user,id',
 
         ]);
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ORMController;
@@ -18,6 +19,7 @@ Route::apiResource('rols', RolController::class);
 Route::apiResource('deliveries', DeliveryController::class);
 Route::apiResource('vehicles', VehicleController::class);
 Route::apiResource('companies', CompanyController::class);
+Route::apiResource('categories', CategoryController::class);
 
 
 //ORM
