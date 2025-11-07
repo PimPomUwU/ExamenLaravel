@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             CompaniesSeeder::class,
             CategoriesSeeder::class,
             ServicesSeeder::class,
+            ProductsSeeder::class,
 
         ]);
     }
