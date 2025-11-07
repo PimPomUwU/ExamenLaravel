@@ -38,6 +38,10 @@ class User extends Model
        return $this->hasOne(Delivery::class);
     }
 
+    public function company () {
+       return $this->hasOne(Company::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

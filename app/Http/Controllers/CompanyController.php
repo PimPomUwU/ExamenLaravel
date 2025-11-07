@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vehicle;
+use App\Models\Company;
 use Illuminate\Http\Request;
 
-class VehicleController extends Controller
+class CompanyController extends Controller
 {
        /**
      * Display a listing of the resource.
@@ -13,7 +13,7 @@ class VehicleController extends Controller
     public function index()
     {
         //
-        $vehicles = Vehicle::all();
+        $vehicles = Company::all();
 
         //if ($request->wantsJson()) {
             return response()->json(['data' => $vehicles], 200);
@@ -38,15 +38,15 @@ class VehicleController extends Controller
     {
         //
         $validated = $request->validate([
-            'brand' => 'required|string|min:0',
+            'company_name' => 'required|string|min:0',
 
-            'delivery_id' => 'required|exists:delivery,id',
+            'user_id' => 'required|exists:delivery,id',
         ]);
 
-        $vehicle = Vehicle::create($validated);
+        $company = Company::create($validated);
 
         //if ($request->wantsJson()) {
-            return response()->json(['data' => $vehicle], 201);
+            return response()->json(['data' => $company], 201);
         //}
 
         //return redirect()->route('centers.index')->with('success', 'Centro creado');
@@ -55,11 +55,11 @@ class VehicleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Request $request, Vehicle $vehicle)
+    public function show(Request $request, Company $company)
     {
         //
                 //if ($request->wantsJson()) {
-            return response()->json(['data' => $vehicle], 200);
+            return response()->json(['data' => $company], 200);
         //}
 
         //return view('center.show', compact('center'));
@@ -68,7 +68,7 @@ class VehicleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Vehicle $vehicle)
+    public function edit(Company $company)
     {
         //
     }
@@ -76,40 +76,40 @@ class VehicleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Vehicle $vehicle)
+    public function update(Request $request, Company $company)
     {
         //
             $validated = $request->validate([
-            'brand' => 'required|string|min:0',
+            'company_name' => 'required|string|min:0',
 
-            'delivery_id' => 'required|exists:delivery,id',
+            'user_id' => 'required|exists:delivery,id',
 
         ]);
 
         //$center->employee_manager_id = $request->employee_manager_id;
 
 
-        $vehicle->update($validated);
+        $company->update($validated);
 
         //if ($request->wantsJson()) {
-            return response()->json(['data' => $vehicle], 200);
+            return response()->json(['data' => $company], 200);
         //}
 
-        //return redirect()->route('centers.index')->with('success', 'Vehicle actualizado');
+        //return redirect()->route('centers.index')->with('success', 'Company actualizado');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Vehicle $vehicle)
+    public function destroy(Request $request, Company $company)
     {
         //
-        $vehicle->delete();
+        $company->delete();
 
         //if ($request->wantsJson()) {
-            return response()->json(['message' => 'Vehicle eliminado'], 200);
+            return response()->json(['message' => 'Company eliminado'], 200);
         //}
 
-        //return redirect()->route('centers.index')->with('success', 'Vehicle eliminado');
+        //return redirect()->route('centers.index')->with('success', 'Company eliminado');
     }
 }

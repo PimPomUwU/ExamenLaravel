@@ -24,7 +24,12 @@ class Delivery extends Model
     ];
 
 
-    public function user () {
+    //relaciones
+    public function user() {
         return $this->belongsTo(User::class);
+    }
+
+    public function vehicle() {
+        return $this->hasOne(Vehicle::class);
     }
 }
