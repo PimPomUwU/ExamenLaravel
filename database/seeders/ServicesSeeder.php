@@ -4,10 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\Service;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class CategoriesSeeder extends Seeder
+class ServicesSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,11 +17,15 @@ class CategoriesSeeder extends Seeder
     {
         //
         $companyIds = Company::pluck('id')->toArray();
+        $categoryIds = Category::pluck('id')->toArray();
 
         foreach ($companyIds as $companyId) {
 
-            Category::factory()->create([
+
+
+            Service::factory()->create([
                 'company_id' => $companyId,
+                'category_id' => rand(1, count($categoryIds)),
             ]);
         }
     }

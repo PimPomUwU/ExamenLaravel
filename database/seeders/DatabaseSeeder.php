@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             VehiclesSeeder::class,
             CompaniesSeeder::class,
             CategoriesSeeder::class,
+            ServicesSeeder::class,
 
         ]);
     }

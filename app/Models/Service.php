@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Category extends Model
+class Service extends Model
 {
     //
-        use HasFactory;
+    use HasFactory;
 
-        protected $fillable = [
+    protected $fillable = [
         'name',
         'description',
     ];
 
-
-    //relaciones
-    public function companies() {
+        public function company() {
         return $this->belongsTo(Company::class);
     }
 
-    public function services() {
-        return $this->hasMany(Service::class);
+        public function category() {
+        return $this->belongsTo(Category::class);
     }
 }
